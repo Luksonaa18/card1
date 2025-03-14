@@ -24,6 +24,14 @@ const Input = ({
     cvc: "",
   });
 
+  const [touched, setTouched] = useState({
+    name: false,
+    cardNumber: false,
+    expMonth: false,
+    expYear: false,
+    cvc: false,
+  });
+
   const [focus, setFocus] = useState({
     name: false,
     cardNumber: false,
@@ -31,65 +39,46 @@ const Input = ({
     expYear: false,
     cvc: false,
   });
-  const [formInteracted, setFormInteracted] = useState(false);
 
   const isFieldEmpty = (field) => {
     return field === "" || field === undefined || field === null;
   };
 
-  useEffect(() => {
-    if (formInteracted) {
-      const newErrors = { ...errors };
-
-      if (isFieldEmpty(name)) newErrors.name = "Cardholder name required";
-      if (isFieldEmpty(cardNumber))
-        newErrors.cardNumber = "Card number required";
-      if (isFieldEmpty(expMonth)) newErrors.expMonth = "Required";
-      if (isFieldEmpty(expYear)) newErrors.expYear = "Required";
-      if (isFieldEmpty(cvc)) newErrors.cvc = "Required";
-
-      setErrors(newErrors);
-    }
-  }, [formInteracted, name, cardNumber, expMonth, expYear, cvc]);
-
   const handleNameChange = (e) => {
-    setFormInteracted(true);
     const value = e.target.value.replace(/[^A-Za-z\s]/g, "");
     setName(value);
+    setTouched({ ...touched, name: true });
 
-    if (value) {
-      setErrors({ ...errors, name: "" });
-    } else {
-      setErrors({ ...errors, name: "Cardholder name required" });
+    let error = "";
+    if (!value) {
+      error = "Cardholder name required";
+    } else if (!/^[A-Za-z\s]+$/.test(value)) {
+      error = "Letters only";
     }
 
-    if (value && !/^[A-Za-z\s]+$/.test(value)) {
-      setErrors({ ...errors, name: "Letters only" });
-    }
+    setErrors({ ...errors, name: error });
   };
 
   const handleCardNumberChange = (e) => {
-    setFormInteracted(true);
     let value = e.target.value;
     value = value.replace(/[^\d]/g, "");
     value = value.replace(/(\d{4})(?=\d)/g, "$1 ");
     value = value.substring(0, 19);
     setCardNumber(value);
+    setTouched({ ...touched, cardNumber: true });
 
-    if (value) {
-      setErrors({ ...errors, cardNumber: "" });
-    } else {
-      setErrors({ ...errors, cardNumber: "Card number required" });
-    }
-
+    let error = "";
     const digits = value.replace(/\s/g, "");
-    if (value && (digits.length !== 16 || !/^\d+$/.test(digits))) {
-      setErrors({ ...errors, cardNumber: "Must be 16 digits" });
+    if (!value) {
+      error = "Card number required";
+    } else if (digits.length !== 16 || !/^\d+$/.test(digits)) {
+      error = "Must be 16 digits";
     }
+
+    setErrors({ ...errors, cardNumber: error });
   };
 
   const handleMonthChange = (e) => {
-    setFormInteracted(true);
     let value = e.target.value;
     value = value.replace(/[^\d]/g, "");
 
@@ -105,56 +94,60 @@ const Input = ({
     }
     value = value.substring(0, 2);
     setExpMonth(value);
+    setTouched({ ...touched, expMonth: true });
 
-    if (value) {
-      setErrors({ ...errors, expMonth: "" });
-    } else {
-      setErrors({ ...errors, expMonth: "Required" });
+    let error = "";
+    if (!value) {
+      error = "Required";
+    } else if (!/^(0[1-9]|1[0-2])$/.test(value)) {
+      error = "01-12 only";
     }
 
-    if (value && !/^(0[1-9]|1[0-2])$/.test(value)) {
-      setErrors({ ...errors, expMonth: "01-12 only" });
-    }
+    setErrors({ ...errors, expMonth: error });
   };
 
   const handleYearChange = (e) => {
-    setFormInteracted(true);
     let value = e.target.value;
     value = value.replace(/[^\d]/g, "");
     value = value.substring(0, 2);
     setExpYear(value);
+    setTouched({ ...touched, expYear: true });
 
-    if (value) {
-      setErrors({ ...errors, expYear: "" });
-    } else {
-      setErrors({ ...errors, expYear: "Required" });
+    let error = "";
+    if (!value) {
+      error = "Required";
+    } else if (!/^\d{2}$/.test(value)) {
+      error = "2 digits";
     }
 
-    if (value && !/^\d{2}$/.test(value)) {
-      setErrors({ ...errors, expYear: "2 digits" });
-    }
+    setErrors({ ...errors, expYear: error });
   };
 
   const handleCvcChange = (e) => {
-    setFormInteracted(true);
     let value = e.target.value;
     value = value.replace(/[^\d]/g, "");
     value = value.substring(0, 4);
     setCvc(value);
+    setTouched({ ...touched, cvc: true });
 
-    if (value) {
-      setErrors({ ...errors, cvc: "" });
-    } else {
-      setErrors({ ...errors, cvc: "Required" });
+    let error = "";
+    if (!value) {
+      error = "Required";
+    } else if (!/^\d{3,4}$/.test(value)) {
+      error = "3-4 digits";
     }
 
-    if (value && !/^\d{3,4}$/.test(value)) {
-      setErrors({ ...errors, cvc: "3-4 digits" });
-    }
+    setErrors({ ...errors, cvc: error });
   };
 
   const validateAllFields = () => {
-    setFormInteracted(true);
+    setTouched({
+      name: true,
+      cardNumber: true,
+      expMonth: true,
+      expYear: true,
+      cvc: true,
+    });
 
     const newErrors = {
       name: "",
@@ -164,51 +157,39 @@ const Input = ({
       cvc: "",
     };
 
-    let hasErrors = false;
-
     if (!name) {
       newErrors.name = "Cardholder name required";
-      hasErrors = true;
     } else if (!/^[A-Za-z\s]+$/.test(name)) {
       newErrors.name = "Letters only";
-      hasErrors = true;
     }
 
     const digits = cardNumber ? cardNumber.replace(/\s/g, "") : "";
     if (!cardNumber) {
       newErrors.cardNumber = "Card number required";
-      hasErrors = true;
     } else if (digits.length !== 16 || !/^\d+$/.test(digits)) {
       newErrors.cardNumber = "Must be 16 digits";
-      hasErrors = true;
     }
 
     if (!expMonth) {
       newErrors.expMonth = "Required";
-      hasErrors = true;
     } else if (!/^(0[1-9]|1[0-2])$/.test(expMonth)) {
       newErrors.expMonth = "01-12 only";
-      hasErrors = true;
     }
 
     if (!expYear) {
       newErrors.expYear = "Required";
-      hasErrors = true;
     } else if (!/^\d{2}$/.test(expYear)) {
       newErrors.expYear = "2 digits";
-      hasErrors = true;
     }
 
     if (!cvc) {
       newErrors.cvc = "Required";
-      hasErrors = true;
     } else if (!/^\d{3,4}$/.test(cvc)) {
       newErrors.cvc = "3-4 digits";
-      hasErrors = true;
     }
 
     setErrors(newErrors);
-    return !hasErrors;
+    return !Object.values(newErrors).some((error) => error !== "");
   };
 
   const handleSubmit = (e) => {
@@ -228,36 +209,49 @@ const Input = ({
             <input
               onChange={handleNameChange}
               onFocus={() => setFocus({ ...focus, name: true })}
-              onBlur={() => setFocus({ ...focus, name: false })}
+              onBlur={() => {
+                setFocus({ ...focus, name: false });
+                if (!touched.name) setTouched({ ...touched, name: true });
+              }}
               type="text"
               name="name"
               value={name || ""}
               placeholder="e.g John Doe"
               className={
-                errors.name ? "error-input" : focus.name ? "focus-input" : ""
+                touched.name && errors.name
+                  ? "error-input"
+                  : focus.name
+                  ? "focus-input"
+                  : ""
               }
             />
-            {errors.name && <p className="error-text">{errors.name}</p>}
+            {touched.name && errors.name && (
+              <p className="error-text">{errors.name}</p>
+            )}
 
-            <label htmlFor="name1">CARD NUMBER</label>
+            <label htmlFor="cardNumber">CARD NUMBER</label>
             <input
               type="text"
-              name="name1"
+              name="cardNumber"
               onChange={handleCardNumberChange}
               onFocus={() => setFocus({ ...focus, cardNumber: true })}
-              onBlur={() => setFocus({ ...focus, cardNumber: false })}
+              onBlur={() => {
+                setFocus({ ...focus, cardNumber: false });
+                if (!touched.cardNumber)
+                  setTouched({ ...touched, cardNumber: true });
+              }}
               value={cardNumber || ""}
               placeholder="e.g 0000 0000 0000 0000"
               maxLength={19}
               className={
-                errors.cardNumber
+                touched.cardNumber && errors.cardNumber
                   ? "error-input"
                   : focus.cardNumber
                   ? "focus-input"
                   : ""
               }
             />
-            {errors.cardNumber && (
+            {touched.cardNumber && errors.cardNumber && (
               <p className="error-text">{errors.cardNumber}</p>
             )}
 
@@ -274,18 +268,22 @@ const Input = ({
                         placeholder="MM"
                         onChange={handleMonthChange}
                         onFocus={() => setFocus({ ...focus, expMonth: true })}
-                        onBlur={() => setFocus({ ...focus, expMonth: false })}
+                        onBlur={() => {
+                          setFocus({ ...focus, expMonth: false });
+                          if (!touched.expMonth)
+                            setTouched({ ...touched, expMonth: true });
+                        }}
                         value={expMonth || ""}
                         maxLength={2}
                         className={
-                          errors.expMonth
+                          touched.expMonth && errors.expMonth
                             ? "error-input"
                             : focus.expMonth
                             ? "focus-input"
                             : ""
                         }
                       />
-                      {errors.expMonth && (
+                      {touched.expMonth && errors.expMonth && (
                         <p className="error-text">{errors.expMonth}</p>
                       )}
                     </div>
@@ -297,18 +295,22 @@ const Input = ({
                         placeholder="YY"
                         onChange={handleYearChange}
                         onFocus={() => setFocus({ ...focus, expYear: true })}
-                        onBlur={() => setFocus({ ...focus, expYear: false })}
+                        onBlur={() => {
+                          setFocus({ ...focus, expYear: false });
+                          if (!touched.expYear)
+                            setTouched({ ...touched, expYear: true });
+                        }}
                         value={expYear || ""}
                         maxLength={2}
                         className={
-                          errors.expYear
+                          touched.expYear && errors.expYear
                             ? "error-input"
                             : focus.expYear
                             ? "focus-input"
                             : ""
                         }
                       />
-                      {errors.expYear && (
+                      {touched.expYear && errors.expYear && (
                         <p className="error-text">{errors.expYear}</p>
                       )}
                     </div>
@@ -321,19 +323,24 @@ const Input = ({
                       name="cvv"
                       onChange={handleCvcChange}
                       onFocus={() => setFocus({ ...focus, cvc: true })}
-                      onBlur={() => setFocus({ ...focus, cvc: false })}
+                      onBlur={() => {
+                        setFocus({ ...focus, cvc: false });
+                        if (!touched.cvc) setTouched({ ...touched, cvc: true });
+                      }}
                       value={cvc || ""}
                       placeholder="e.g 123"
                       maxLength={4}
                       className={
-                        errors.cvc
+                        touched.cvc && errors.cvc
                           ? "error-input"
                           : focus.cvc
                           ? "focus-input"
                           : ""
                       }
                     />
-                    {errors.cvc && <p className="error-text">{errors.cvc}</p>}
+                    {touched.cvc && errors.cvc && (
+                      <p className="error-text">{errors.cvc}</p>
+                    )}
                   </div>
                 </div>
               </div>
